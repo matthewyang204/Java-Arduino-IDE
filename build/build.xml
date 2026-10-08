@@ -490,6 +490,12 @@
     </create-macosx-app-bundle>
   </target>
 
+  <target name="build-appbundler">
+    <exec executable="make"
+          dir="${basedir}/macosx/appbundler"
+          failonerror="true"/>
+  </target>
+
   <target name="macosx-build" if="macosx" depends="revision-check, macosx-checkos, subprojects-build" description="Build Mac OS X version">
     <fail unless="MACOSX_BUNDLED_JVM" message="MacOSX requires MACOSX_BUNDLED_JVM property set"/>
     <condition property="macosx-arch-valid">
@@ -503,12 +509,7 @@
     <fail unless="macosx-arch-valid" message="Unsupported MACOSX_ARCH '${MACOSX_ARCH}'. Use universal, x86_64, i386, or arm64."/>
     <mkdir dir="${staging_folder}/work" />
 
-    <antcall target="unzip">
-      <param name="archive_file" value="${staging_folder}/appbundler-1.0ea-arduino9.jar.zip" />
-      <param name="archive_url" value="https://downloads.arduino.cc/appbundler-1.0ea-arduino9.jar.zip" />
-      <param name="final_folder" value="${staging_folder}/appbundler-1.0ea-arduino9" />
-      <param name="dest_folder" value="${staging_folder}/appbundler-1.0ea-arduino9" />
-    </antcall>
+    <antcall target="build-appbundler"/>
 
     <taskdef name="bundleapp" classname="com.oracle.appbundler.AppBundlerTask" classpath="${staging_folder}/appbundler-1.0ea-arduino9/appbundler-1.0ea-arduino9.jar"/>
 

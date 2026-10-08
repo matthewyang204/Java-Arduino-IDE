@@ -890,84 +890,88 @@ NSString * findJDK (
 }
 
 /**
- * Checks the version of a Java home for compatibility.
+ * Checks the version of a Java home for compatibility. Stubbed here to avoid issues
  */
-bool checkJavaVersionCompatibility (
-                                    NSString *javaHome,
-                                    int jvmRequired,
-                                    bool exactMatch)
+bool checkJavaVersionCompatibility (NSString *javaHome, int jvmRequired, bool exactMatch)
 {
-    // Try the "java -version" shell command and see if we get a response and
-    // if so whether the version  is acceptable.
-    // Note that for unknown but ancient reasons, the result is output to stderr
-    // rather than to stdout.
-    @try
-    {
-        NSTask *task = [[NSTask alloc] init];
-        [task setLaunchPath:[javaHome stringByAppendingPathComponent:@"bin/java"]];
-
-        NSArray *args = [NSArray arrayWithObjects: @"-version", nil];
-        [task setArguments:args];
-
-        NSPipe *stdout = [NSPipe pipe];
-        [task setStandardOutput:stdout];
-
-        NSPipe *stderr = [NSPipe pipe];
-        [task setStandardError:stderr];
-
-        [task setStandardInput:[NSPipe pipe]];
-
-        NSFileHandle *outHandle = [stdout fileHandleForReading];
-        NSFileHandle *errHandle = [stderr fileHandleForReading];
-
-        [task launch];
-        [task waitUntilExit];
-        [task release];
-
-        NSData *data1 = [outHandle readDataToEndOfFile];
-        NSData *data2 = [errHandle readDataToEndOfFile];
-
-        NSString *outRead = [[NSString alloc] initWithData:data1
-                                                  encoding:NSUTF8StringEncoding];
-        NSString *errRead = [[NSString alloc] initWithData:data2
-                                                  encoding:NSUTF8StringEncoding];
-
-        //  Found something in errRead. Parse it for a Java version string and
-        //  try to extract a major version number.
-        if (errRead != nil)
-        {
-            int version = 0;
-
-            // The result of the version command is 'java version "1.x"' or 'java version "9"' or 'openjdk version "1.x" or 'openjdk version "12.x.y"'
-            NSRange vrange = [errRead rangeOfString:@"version \""];
-
-            if (vrange.location != NSNotFound)
-            {
-                NSString *vstring = [errRead substringFromIndex:(vrange.location + 9)];
-
-                vrange  = [vstring rangeOfString:@"\""];
-                vstring = [vstring substringToIndex:vrange.location];
-
-                version = extractMajorVersion(vstring);
-
-                Log(@"Found a Java version: %@ (at: %@)", vstring, javaHome);
-                Log(@"Looks like major version: %d", version);
-            }
-
-            if ( ((version >= jvmRequired) && !exactMatch) || ((version == jvmRequired) && exactMatch) )
-            {
-                Log(@"Java version qualifies");
-                return true;
-            }
-        }
-    }
-    @catch (NSException *exception)
-    {
-        Log(@"Java version check exception: '%@'", [exception reason]);
-    }
-
-    return false;
+    return (javaHome != nil);
 }
+// bool checkJavaVersionCompatibility (
+//                                     NSString *javaHome,
+//                                     int jvmRequired,
+//                                     bool exactMatch)
+// {
+//     // Try the "java -version" shell command and see if we get a response and
+//     // if so whether the version  is acceptable.
+//     // Note that for unknown but ancient reasons, the result is output to stderr
+//     // rather than to stdout.
+//     @try
+//     {
+//         NSTask *task = [[NSTask alloc] init];
+//         [task setLaunchPath:[javaHome stringByAppendingPathComponent:@"bin/java"]];
+
+//         NSArray *args = [NSArray arrayWithObjects: @"-version", nil];
+//         [task setArguments:args];
+
+//         NSPipe *stdout = [NSPipe pipe];
+//         [task setStandardOutput:stdout];
+
+//         NSPipe *stderr = [NSPipe pipe];
+//         [task setStandardError:stderr];
+
+//         [task setStandardInput:[NSPipe pipe]];
+
+//         NSFileHandle *outHandle = [stdout fileHandleForReading];
+//         NSFileHandle *errHandle = [stderr fileHandleForReading];
+
+//         [task launch];
+//         [task waitUntilExit];
+//         [task release];
+
+//         NSData *data1 = [outHandle readDataToEndOfFile];
+//         NSData *data2 = [errHandle readDataToEndOfFile];
+
+//         NSString *outRead = [[NSString alloc] initWithData:data1
+//                                                   encoding:NSUTF8StringEncoding];
+//         NSString *errRead = [[NSString alloc] initWithData:data2
+//                                                   encoding:NSUTF8StringEncoding];
+
+//         //  Found something in errRead. Parse it for a Java version string and
+//         //  try to extract a major version number.
+//         if (errRead != nil)
+//         {
+//             int version = 0;
+
+//             // The result of the version command is 'java version "1.x"' or 'java version "9"' or 'openjdk version "1.x" or 'openjdk version "12.x.y"'
+//             NSRange vrange = [errRead rangeOfString:@"version \""];
+
+//             if (vrange.location != NSNotFound)
+//             {
+//                 NSString *vstring = [errRead substringFromIndex:(vrange.location + 9)];
+
+//                 vrange  = [vstring rangeOfString:@"\""];
+//                 vstring = [vstring substringToIndex:vrange.location];
+
+//                 version = extractMajorVersion(vstring);
+
+//                 Log(@"Found a Java version: %@ (at: %@)", vstring, javaHome);
+//                 Log(@"Looks like major version: %d", version);
+//             }
+
+//             if ( ((version >= jvmRequired) && !exactMatch) || ((version == jvmRequired) && exactMatch) )
+//             {
+//                 Log(@"Java version qualifies");
+//                 return true;
+//             }
+//         }
+//     }
+//     @catch (NSException *exception)
+//     {
+//         Log(@"Java version check exception: '%@'", [exception reason]);
+//     }
+
+//     return false;
+// }
 
 /**
  *  Extract the Java major version number from a string. We expect the input

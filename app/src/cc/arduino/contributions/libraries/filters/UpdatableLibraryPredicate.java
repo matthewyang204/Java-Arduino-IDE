@@ -56,7 +56,7 @@ public class UpdatableLibraryPredicate implements Predicate<ContributedLibrary> 
     }
     String libraryName = lib.getName();
     List<ContributedLibrary> libraries = librariesIndexer.getIndex().find(libraryName);
-    ContributedLibrary latest = libraries.stream().reduce(VersionComparator::max).get();
+    ContributedLibrary latest = libraries.stream().reduce(VersionComparator::maxThing).get();
     return !latest.isLibraryInstalled();
   }
 }

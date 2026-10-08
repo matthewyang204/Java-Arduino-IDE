@@ -531,12 +531,10 @@
       <param name="target.path" value="${staging_folder}/work/${staging_hardware_folder}/.." />
     </antcall>
 
-    <antcall target="unzip">
-      <param name="archive_file" value="./libastylej-2.05.1-5.zip" />
-      <param name="archive_url" value="https://downloads.arduino.cc/libastylej-2.05.1-5.zip" />
-      <param name="final_folder" value="${staging_folder}/libastylej-2.05.1" />
-      <param name="dest_folder" value="${staging_folder}" />
-    </antcall>
+    <exec executable="make"
+          dir="macosx/astyle"
+          failonerror="true">
+    </exec>
     <copy file="macosx/libastylej-2.05.1/libastylej.jnilib" todir="macosx/work/${staging_hardware_folder}/../lib/" />
     <chmod perm="755" file="macosx/work/${staging_hardware_folder}/../lib/libastylej.jnilib" />
     <copy file="macosx/libastylej-2.05.1/libastylej.jnilib" tofile="macosx/work/${staging_hardware_folder}/../lib/libastylej.dylib" />

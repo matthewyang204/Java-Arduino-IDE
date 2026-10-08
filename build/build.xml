@@ -66,7 +66,11 @@
   <condition property="launch4j-download-unpack-target-name" value="launch4j-windows"><os family="windows" /></condition>
   <property name="launch4j-download-unpack-target-name" value="launch4j-linux"/>
 
-  <property name="MACOSX_BUNDLED_JVM" value="${java.home}/../"/>
+  <property environment="env"/>
+  <condition property="MACOSX_BUNDLED_JVM" value="${env.JAVA_HOME}">
+    <isset property="env.JAVA_HOME"/>
+  </condition>
+  <property name="MACOSX_BUNDLED_JVM" value="${java.home}"/>
   <property name="WINDOWS_BUNDLED_JVM" value="${java.home}"/>
   <property name="LINUX32_BUNDLED_JVM" value="none"/>
   <property name="LINUX64_BUNDLED_JVM" value="none"/>

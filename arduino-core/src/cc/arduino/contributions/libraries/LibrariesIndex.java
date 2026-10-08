@@ -149,7 +149,7 @@ public class LibrariesIndex {
         selected = installed.get();
       } else {
         // otherwise pick the latest version
-        selected = possibleDeps.stream().reduce(VersionComparator::max).get();
+        selected = possibleDeps.stream().reduce(VersionComparator::maxThing).get();
       }
 
       // Add dependency to the solution and process recursively

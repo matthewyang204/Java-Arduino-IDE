@@ -66,11 +66,11 @@ public class VersionComparator implements Comparator<String> {
     return compareTo(a, b) >= 0;
   }
 
-  public static String max(String a, String b) {
+  public static String maxThing(String a, String b) {
     return greaterThan(a, b) ? a : b;
   }
 
-  public static ContributedLibrary max(ContributedLibrary a, ContributedLibrary b) {
+  public static ContributedLibrary maxThing(ContributedLibrary a, ContributedLibrary b) {
     return greaterThan(a, b) ? a : b;
   }
 

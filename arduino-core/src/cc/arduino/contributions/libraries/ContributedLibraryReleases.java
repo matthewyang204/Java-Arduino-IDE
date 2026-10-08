@@ -84,7 +84,7 @@ public class ContributedLibraryReleases {
           Location lx = x.getInstalledLibrary().get().getLocation();
           Location ly = y.getInstalledLibrary().get().getLocation();
           if (lx == ly) {
-            return VersionComparator.max(x, y);
+            return VersionComparator.maxThing(x, y);
           }
           return lx == Location.SKETCHBOOK ? x : y;
         });

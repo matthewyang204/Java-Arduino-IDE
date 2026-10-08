@@ -701,6 +701,8 @@ public class BaseNoGui {
       String toolPath;
       if (installedFolder != null) {
         toolPath = installedFolder.getAbsolutePath();
+      } else if ("avrdude".equals(tool.getName())) {
+        toolPath = BaseNoGui.getContentFile("hardware/tools/avr").getAbsolutePath();
       } else {
         toolPath = Constants.PREF_REMOVE_PLACEHOLDER;
       }

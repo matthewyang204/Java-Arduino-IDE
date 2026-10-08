@@ -150,7 +150,8 @@ public class EditorToolbar extends JComponent implements MouseInputListener, Key
     statusFont = Theme.getFont("buttons.status.font");
     statusColor = Theme.getColor("buttons.status.color");
 
-    if (OSUtils.isMacOS() && VersionComparator.greaterThanOrEqual(OSUtils.version(), "10.12")) {
+    if (System.getProperty("os.arch").equals("x86_64") && OSUtils.isMacOS() &&
+        VersionComparator.greaterThanOrEqual(OSUtils.version(), "10.12")) {
       editor.addWindowListener(new WindowAdapter() {
         public void windowActivated(WindowEvent e) {
           if (touchBar == null) {

@@ -2,6 +2,9 @@ CC ?= clang
 JAVA_HOME ?= $(shell brew --prefix openjdk@11)
 CFLAGS += -fPIC -I"$(JAVA_HOME)/include" -I"$(JAVA_HOME)/include/darwin" -I"$(shell brew --prefix libserialport)/include"
 LDFLAGS += -L"$(shell brew --prefix libserialport)/lib" -lserialport
+LIBLISTSERIAL_VERSION ?= 1.4.2-2
 
 all:
 	$(CC) -dynamiclib $(CFLAGS) jnilib.c $(LDFLAGS) -o liblistSerialsj.dylib
+	mkdir -p ../liblistSerials-$(LIBLISTSERIAL_VERSION)/osx
+	cp liblistSerialsj.dylib ../liblistSerials-$(LIBLISTSERIAL_VERSION)/osx/

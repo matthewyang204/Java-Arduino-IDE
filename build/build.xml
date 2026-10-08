@@ -542,12 +542,12 @@
     <copy file="macosx/libastylej-2.05.1/libastylej.jnilib" tofile="macosx/work/${staging_hardware_folder}/../lib/libastylej.dylib" />
     <chmod perm="755" file="macosx/work/${staging_hardware_folder}/../lib/libastylej.dylib" />
 
-    <antcall target="unzip">
-      <param name="archive_file" value="./liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
-      <param name="archive_url" value="https://downloads.arduino.cc/liblistSerials/liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
-      <param name="final_folder" value="${staging_folder}/liblistSerials-${LIBLISTSERIAL-VERSION}" />
-      <param name="dest_folder" value="${staging_folder}" />
-    </antcall>
+    <exec executable="make"
+          dir="macosx/listserialportsc"
+          failonerror="true">
+        <arg value="-f"/>
+        <arg value="Makefile.darwindlb"/>
+    </exec>
     <copy file="macosx/liblistSerials-${LIBLISTSERIAL-VERSION}/osx/liblistSerialsj.dylib" todir="macosx/work/${staging_hardware_folder}/../lib/" />
     <chmod perm="755" file="macosx/work/${staging_hardware_folder}/../lib/liblistSerialsj.dylib" />
 

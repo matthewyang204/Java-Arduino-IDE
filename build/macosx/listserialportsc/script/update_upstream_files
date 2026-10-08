@@ -1,0 +1,19 @@
+#!/bin/bash
+# License: LGPL-3.0-only  same as upstream
+# Copyright: 2018 Geert Stappers <stappers@stappers.it>
+
+FILES=""
+FILES="${FILES} main.c"
+FILES="${FILES} jnilib.c"
+FILES="${FILES} LICENSE.md"
+# and the "build instructions":
+FILES="${FILES} compile_linux.sh"
+
+RAWGITURL=https://raw.githubusercontent.com/arduino/listSerialPortsC/master/
+
+for F in ${FILES}
+do
+  wget -q -O ${F} ${RAWGITURL}${F}
+done
+
+# l l

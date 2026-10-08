@@ -1,0 +1,21 @@
+#!/bin/bash
+# License: LGPL-3.0-only  same as upstream
+# Copyright: 2018 Geert Stappers <stappers@stappers.it>
+
+source version
+PKG=listserialportsc
+TARDIR=${PKG}-${VERSION}
+TARFLN=../${PKG}_${VERSION}.orig.tar
+rm -f ${TARFLN}* # have a fresh start
+mkdir ${TARDIR}
+mkdir ${TARDIR}/script
+# copy the files that really matter
+cp -p *.c Makefile ${TARDIR}
+# copy files to prevent "source have been changed"
+cp -p LICENSE.md README.rst version ${TARDIR}
+cp -p script/* ${TARDIR}/script
+tar cf ${TARFLN} ${TARDIR}
+xz ${TARFLN}
+rm -rf ${TARDIR}
+
+# l l

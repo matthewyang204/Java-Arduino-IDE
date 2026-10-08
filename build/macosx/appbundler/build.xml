@@ -75,9 +75,13 @@ questions.
             <arg value="--show-sdk-path" />
         </exec>
 
+        <exec executable="uname" outputproperty="HOSTARCH">
+            <arg value="-m"/>
+        </exec>
+
         <exec executable="${cc}" failonerror="true">
-            <arg line="${arch64}"/>
-            <arg line="${archarm64}"/>
+            <arg value="-arch"/>
+            <arg value="${HOSTARCH}"/>
             <arg value="-I"/>
             <arg value="${javahome}/include"/>
             <arg value="-I"/>

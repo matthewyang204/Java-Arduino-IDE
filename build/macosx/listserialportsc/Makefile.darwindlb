@@ -1,0 +1,7 @@
+CC ?= clang
+JAVA_HOME ?= $(shell brew --prefix openjdk@11)
+CFLAGS += -fPIC -I"$(JAVA_HOME)/include" -I"$(JAVA_HOME)/include/darwin" -I"$(shell brew --prefix libserialport)/include"
+LDFLAGS += -L"$(shell brew --prefix libserialport)/lib" -lserialport
+
+all:
+	$(CC) -dynamiclib $(CFLAGS) jnilib.c $(LDFLAGS) -o liblistSerialsj.dylib

@@ -2,7 +2,16 @@
 set -eu
 
 APP="$PWD/work/Arduino.app"
-JDK="$APP"/Contents/PlugIns/*.jdk/Contents/Home
+JDK=$(find "$APP/Contents" -type d -name '*.jdk' -print -quit)
+if [ -z "$JDK" ]; then
+    echo "ERROR: JDK bundle not found in $APP/Contents" >&2
+    exit 1
+fi
+JDK="$JDK/Contents/Home"
+if [ ! -d "$JDK" ]; then
+    echo "ERROR: JDK home not found: $JDK" >&2
+    exit 1
+fi
 
 OLD="/System/Library/Frameworks/JavaRuntimeSupport.framework/Versions/A/JavaRuntimeSupport"
 NEW="/System/Library/Frameworks/JavaVM.framework/Versions/A/Frameworks/JavaRuntimeSupport.framework/Versions/A/JavaRuntimeSupport"

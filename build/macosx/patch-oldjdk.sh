@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -eu
 
+VERSION=$(sw_vers -productVersion)
+if [[ "$(printf '%s\n' "$VERSION" "10.15" | sort -V | tail -n 1)" != "10.15" ]]; then
+    echo "Skipping: macOS $VERSION is newer than 10.15."
+    exit 0
+fi
+
 APP="$PWD/work/Arduino.app"
 JDK=$(find "$APP/Contents" -type d -name '*.jdk' -print -quit)
 if [ -z "$JDK" ]; then

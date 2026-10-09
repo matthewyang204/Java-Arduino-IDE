@@ -598,8 +598,8 @@
       <param name="gcc_archive_file" value="${MACOSX_AVR_GCC_ARCHIVE_FILE}"/>
       <param name="gcc_archive_url" value="${MACOSX_AVR_GCC_ARCHIVE_URL}"/>
       <param name="gcc_version" value="${AVRGCC-VERSION}"/>
-      <param name="avrdude_archive_file" value="avrdude-${AVRDUDE-VERSION}-x86_64-apple-darwin12-signed.tar.bz2"/>
-      <param name="avrdude_version" value="${AVRDUDE-VERSION}"/>
+      <param name="avrdude_source_build" value="true"/>
+      <param name="avrdude_version" value="8.3"/>
       <param name="arduinoOTA_archive_file" value="arduinoOTA-${arduinoOTA-VERSION}-darwin_amd64-signed.tar.bz2"/>
       <param name="arduinoOTA_version" value="${arduinoOTA-VERSION}"/>
     </antcall>
@@ -1370,14 +1370,10 @@
       <param name="dest_folder" value="${staging_folder}/work/${staging_hardware_folder}/tmp/gcc/"/>
     </antcall>
 
-    <mkdir dir="${staging_folder}/work/${staging_hardware_folder}/tmp/avrdude"/>
+    <move file="${staging_folder}/work/${staging_hardware_folder}/tmp/gcc/avr" tofile="${staging_folder}/work/${staging_hardware_folder}/tools/avr"/>
 
-    <antcall target="${unpack_target}">
-      <param name="archive_file" value="${staging_folder}/${avrdude_archive_file}"/>
-      <param name="archive_url" value="https://downloads.arduino.cc/tools/${avrdude_archive_file}"/>
-      <param name="final_folder" value="${staging_folder}/work/${staging_hardware_folder}/tmp/avrdude/${avrdude_version}"/>
-      <param name="dest_folder" value="${staging_folder}/work/${staging_hardware_folder}/tmp/avrdude/"/>
-    </antcall>
+    <antcall target="avr-toolchain-bundle-avrdude-source"/>
+    <antcall target="avr-toolchain-bundle-avrdude-download"/>
 
     <mkdir dir="${staging_folder}/work/${staging_hardware_folder}/tmp/arduinoOTA"/>
 
@@ -1388,8 +1384,6 @@
       <param name="dest_folder" value="${staging_folder}/work/${staging_hardware_folder}/tmp/arduinoOTA/"/>
     </antcall>
 
-    <move file="${staging_folder}/work/${staging_hardware_folder}/tmp/gcc/avr" tofile="${staging_folder}/work/${staging_hardware_folder}/tools/avr"/>
-    <move file="${staging_folder}/work/${staging_hardware_folder}/tmp/avrdude/avrdude" tofile="${staging_folder}/work/${staging_hardware_folder}/tools/avr"/>
     <move file="${staging_folder}/work/${staging_hardware_folder}/tmp/arduinoOTA/arduinoOTA/" tofile="${staging_folder}/work/${staging_hardware_folder}/tools/avr"/>
 
     <echo append="true" file="${staging_folder}/work/${staging_hardware_folder}/tools/avr/builtin_tools_versions.txt" message="arduino.avrdude=${avrdude_version}${line.separator}"/>
@@ -1397,6 +1391,26 @@
     <echo append="true" file="${staging_folder}/work/${staging_hardware_folder}/tools/avr/builtin_tools_versions.txt" message="arduino.avr-gcc=${gcc_version}${line.separator}"/>
 
     <delete dir="${staging_folder}/work/${staging_hardware_folder}/tmp"/>
+  </target>
+
+  <target name="avr-toolchain-bundle-avrdude-source" if="avrdude_source_build">
+    <exec executable="make" dir="${basedir}/macosx/avrdude-src" failonerror="true"/>
+    <copy todir="${staging_folder}/work/${staging_hardware_folder}/tools/avr">
+      <fileset dir="${basedir}/macosx/avrdude"/>
+    </copy>
+  </target>
+
+  <target name="avr-toolchain-bundle-avrdude-download" unless="avrdude_source_build">
+    <mkdir dir="${staging_folder}/work/${staging_hardware_folder}/tmp/avrdude"/>
+
+    <antcall target="${unpack_target}">
+      <param name="archive_file" value="${staging_folder}/${avrdude_archive_file}"/>
+      <param name="archive_url" value="https://downloads.arduino.cc/tools/${avrdude_archive_file}"/>
+      <param name="final_folder" value="${staging_folder}/work/${staging_hardware_folder}/tmp/avrdude/${avrdude_version}"/>
+      <param name="dest_folder" value="${staging_folder}/work/${staging_hardware_folder}/tmp/avrdude/"/>
+    </antcall>
+
+    <move file="${staging_folder}/work/${staging_hardware_folder}/tmp/avrdude/avrdude" tofile="${staging_folder}/work/${staging_hardware_folder}/tools/avr"/>
   </target>
 
   <target name="generate-hourly-build-txt" if="hourly">

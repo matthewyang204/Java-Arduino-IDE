@@ -1,0 +1,478 @@
+#
+# build.yml - GitHub build action for AVRDUDE
+# Copyright (C) 2021 Marius Greuel
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+name: Build
+
+on:
+  push:
+    branches-ignore:
+      - 'onlinedocs'
+  pull_request:
+    branches-ignore:
+      - 'onlinedocs'
+  workflow_call:
+
+env:
+  BUILD_TYPE: RelWithDebInfo
+
+jobs:
+  linux-x86_64-autotools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install prerequisites
+        run: >-
+          sudo apt-get update
+
+          sudo apt-get install -y
+          build-essential
+          automake
+          libtool
+          pkg-config
+          flex
+          bison
+          libelf-dev
+          libusb-dev
+          libusb-1.0-0-dev
+          libhidapi-dev
+          libftdi1-dev
+          libreadline-dev
+          libserialport-dev
+          libgpiod-dev
+          texinfo
+          texlive
+          texi2html
+      - name: Configure
+        run: >-
+          autoreconf -vis src
+
+          mkdir _ambuild && cd _ambuild
+
+          ../src/configure
+          --enable-option-checking=fatal
+          --enable-doc
+          --enable-parport
+          --enable-linuxgpio
+          --enable-linuxspi
+      - name: Build
+        run: make -C _ambuild -j$(nproc)
+      - name: "avrdude -? (not installed)"
+        run: _ambuild/avrdude -?
+      - name: "Dryrun test (not installed)"
+        run: printf "\n\n" | ./tools/test-avrdude -v -e _ambuild/avrdude -c '-C _ambuild/avrdude.conf' -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"
+      - name: Install
+        run: sudo make -C _ambuild install
+      - name: "Dryrun test (installed)"
+        run: >-
+          export LD_LIBRARY_PATH="/usr/local/lib";
+          printf "\n\n" | ./tools/test-avrdude -v -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"
+      # Re-enable distcheck after the doc fixes
+      # - name: distcheck
+      #   run: make -C _ambuild -j$(nproc) distcheck "DISTCHECK_CONFIGURE_FLAGS=--disable-doc"
+
+  linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install prerequisites
+        run: >-
+          sudo apt-get update
+
+          sudo apt-get install -y
+          build-essential
+          cmake
+          pkg-config
+          flex
+          bison
+          libelf-dev
+          libusb-dev
+          libusb-1.0-0-dev
+          libhidapi-dev
+          libftdi1-dev
+          libreadline-dev
+          libserialport-dev
+          libgpiod-dev
+          texinfo
+          texlive
+          texi2html
+      - name: Configure
+        run: >-
+          cmake
+          -D BUILD_DOC=1
+          -D DEBUG_CMAKE=1
+          -D HAVE_PARPORT=1
+          -D HAVE_LINUXGPIO=1
+          -D HAVE_LINUXSPI=1
+          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -B build
+      - name: Build
+        run: cmake --build build
+      - name: "avrdude -? (not installed)"
+        run: build/src/avrdude -?
+      - name: "Dryrun test (not installed)"
+        run: printf "\n\n" | ./tools/test-avrdude -v -e build/src/avrdude -c '-C build/src/avrdude.conf' -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"
+      - name: Install
+        run: sudo cmake --build build --target install
+      - name: "Dryrun test (installed)"
+        run: printf "\n\n" | ./tools/test-avrdude -v -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"
+      - name: Archive build artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-linux-x86_64
+          path: |
+            build/
+            !**/*.d
+            !**/*.o
+      - name: Archive executables
+        uses: actions/upload-artifact@v7
+        with:
+          name: avrdude-linux-x86_64
+          path: |
+            build/src/avrdude
+            build/src/avrdude.conf
+
+  linux:
+    runs-on: ubuntu-latest
+    container: debian:13
+    strategy:
+      matrix:
+        include:
+          - { arch: i386, processor: i686, prefix: i686-linux-gnu, inc-lib: i386-linux-gnu }
+          - { arch: armhf, processor: armhf, prefix: arm-linux-gnueabihf, inc-lib: arm-linux-gnueabihf }
+          - { arch: arm64, processor: aarch64, prefix: aarch64-linux-gnu, inc-lib: aarch64-linux-gnu }
+    steps:
+      - uses: actions/checkout@v6
+      - name: Add architecture
+        run: |
+          dpkg --add-architecture ${{matrix.arch}}
+          apt-get update
+      - name: Install prerequisites
+        run: >-
+          apt-get update
+
+          apt-get install -y
+          git
+          cmake
+          pkg-config
+          flex
+          bison
+          crossbuild-essential-${{matrix.arch}}
+          libelf-dev:${{matrix.arch}}
+          libusb-dev:${{matrix.arch}}
+          libusb-1.0-0-dev:${{matrix.arch}}
+          libhidapi-dev:${{matrix.arch}}
+          libftdi1-dev:${{matrix.arch}}
+          libreadline-dev:${{matrix.arch}}
+          libserialport-dev:${{matrix.arch}}
+          libgpiod-dev:${{matrix.arch}}
+      - name: Configure
+        run: >-
+          cmake
+          -D DEBUG_CMAKE=1
+          -D HAVE_PARPORT=1
+          -D HAVE_LINUXGPIO=1
+          -D HAVE_LINUXSPI=1
+          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -D CMAKE_SYSTEM_NAME=Linux
+          -D CMAKE_SYSTEM_PROCESSOR=${{matrix.processor}}
+          -D CMAKE_C_COMPILER=${{matrix.prefix}}-gcc
+          -D CMAKE_FIND_ROOT_PATH=/usr/${{matrix.prefix}}
+          -D CMAKE_INCLUDE_PATH=/usr/include/${{matrix.inc-lib}}
+          -D CMAKE_LIBRARY_PATH=/usr/lib/${{matrix.inc-lib}}
+          -B build
+      - name: Build
+        run: cmake --build build
+      - name: "avrdude -? (not installed)"
+        if: matrix.arch == 'i386'
+        run: build/src/avrdude -?
+      - name: "Dryrun test (not installed)"
+        if: matrix.arch == 'i386'
+        run: printf "\n\n" | ./tools/test-avrdude -v -e build/src/avrdude -c '-C build/src/avrdude.conf' -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"
+      - name: Install
+        if: matrix.arch == 'i386'
+        run: cmake --build build --target install
+      - name: "Dryrun test (installed)"
+        if: matrix.arch == 'i386'
+        run: printf "\n\n" | ./tools/test-avrdude -v -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"        
+      - name: Archive build artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-linux-${{matrix.processor}}
+          path: |
+            build/
+            !**/*.d
+            !**/*.o
+      - name: Archive executables
+        uses: actions/upload-artifact@v7
+        with:
+          name: avrdude-linux-${{matrix.processor}}
+          path: |
+            build/src/avrdude
+            build/src/avrdude.conf
+
+  macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Original PATH and build tools
+        run: |
+          echo "PATH=$PATH"
+          for b in bison flex pkg-config; do type "$b"; done
+      - name: Install prerequisites
+        run: >-
+          brew install
+          cmake
+          flex
+          bison
+          swig
+          libelf
+          libusb
+          libusb-compat
+          hidapi
+          libftdi
+          readline
+          libserialport
+      - name: Configure environment to use brew kegs for flex and bison
+        run: |
+          echo "PATH=/opt/homebrew/opt/flex/bin:/opt/homebrew/opt/bison/bin:$PATH" >> $GITHUB_ENV
+      - name: post-brew PATH and build tools
+        run: |
+          echo "PATH=$PATH"
+          for b in bison flex pkg-config; do type "$b"; done
+      - name: Configure
+        run: >-
+          cmake
+          -D CMAKE_C_FLAGS="-I/opt/homebrew/include"
+          -D CMAKE_EXE_LINKER_FLAGS="-L/opt/homebrew/Cellar"
+          -D DEBUG_CMAKE=1
+          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -B build
+      - name: Build
+        run: cmake --build build
+      - name: "avrdude -? (not installed)"
+        run: build/src/avrdude -?
+      - name: "Dryrun test (not installed)"
+        run: printf "\n\n" | ./tools/test-avrdude -v -e build/src/avrdude -c '-C build/src/avrdude.conf' -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"
+      - name: Archive build artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-macos-arm64
+          path: |
+            build/
+            !**/*.d
+            !**/*.o
+      - name: Archive executables
+        uses: actions/upload-artifact@v7
+        with:
+          name: avrdude-macos-arm64
+          path: |
+            build/src/avrdude
+            build/src/avrdude.conf
+
+  macos-arm64-autotools:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Original PATH and build tools
+        run: |
+          echo "PATH=$PATH"
+          for b in bison flex pkg-config; do type "$b"; done
+      - name: Install prerequisites
+        run: >-
+          brew install
+          automake
+          autoconf
+          libtool
+          gettext
+          flex
+          bison
+          libelf
+          libusb
+          hidapi
+          libftdi
+          readline
+          libserialport
+      - name: Configure environment to use brew kegs for flex and bison
+        run: |
+          echo "PATH=/opt/homebrew/opt/flex/bin:/opt/homebrew/opt/bison/bin:$PATH" >> $GITHUB_ENV
+      - name: post-brew PATH and build tools
+        run: |
+          echo "PATH=$PATH"
+          for b in bison flex pkg-config; do type "$b"; done
+      - name: Configure
+        run: >-
+          ./src/bootstrap
+
+          mkdir _ambuild && cd _ambuild
+
+          CFLAGS="-I/opt/homebrew/include"
+          LDFLAGS="-L/opt/homebrew/lib"
+          ../src/configure
+          --enable-option-checking=fatal
+
+      - name: Build
+        run: make -C _ambuild -j$(nproc)
+      - name: "avrdude -? (not installed)"
+        run: _ambuild/avrdude -?
+      - name: "Dryrun test (not installed)"
+        run: printf "\n\n" | ./tools/test-avrdude -v -e _ambuild/avrdude -c '-C _ambuild/avrdude.conf' -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"
+
+  msvc:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - { arch: x86, platform: Win32, extra-cmake-args: "" }
+          - { arch: x64, platform: x64, extra-cmake-args: "" }
+          - { arch: arm64, platform: ARM64, extra-cmake-args: "-D SWIG_EXECUTABLE=SWIG_EXECUTABLE-NOTFOUND"  }
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install prerequisites
+        # As Chocolatey is notoriously unreliable, install winflexbison3 directly from GitHub.
+        # run: choco install winflexbison3
+        run: |
+          curl https://github.com/lexxmark/winflexbison/releases/download/v2.5.24/win_flex_bison-2.5.24.zip --location --output winflexbison.zip
+          unzip winflexbison.zip -d ${{github.workspace}}\winflexbison
+          echo "${{github.workspace}}\winflexbison" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Configure
+        run: >-
+          cmake
+          -A ${{matrix.platform}}
+          -D DEBUG_CMAKE=1
+          -D CMAKE_SYSTEM_VERSION=11
+          -D CMAKE_C_FLAGS_RELWITHDEBINFO="/MT /GL /Zi /O2 /Ob1 /DNDEBUG"
+          -D CMAKE_CXX_FLAGS_RELWITHDEBINFO="/MT /GL /Zi /O2 /Ob1 /DNDEBUG"
+          -D CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="/DEBUG /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF"
+          -D HAVE_LIBREADLINE=HAVE_LIBREADLINE-NOTFOUND
+          -D USE_EXTERNAL_LIBS=1
+          ${{matrix.extra-cmake-args}}
+          -B build
+      - name: Build
+        run: cmake --build build --config ${{env.BUILD_TYPE}}
+      - name: "avrdude -? (not installed)"
+        # FIXME: Skip running avrdude.
+        #        The exe file on arm64 is not runnable - x86_64 perhaps?
+        if: matrix.arch != 'arm64'
+        run: build/src/${{env.BUILD_TYPE}}/avrdude.exe -?
+      - name: "Dryrun test (not installed)"
+        #        The exe file on arm64 is not runnable as the runner is x86_64.
+        if: matrix.arch != 'arm64'
+        run: |
+          $tmp = [System.IO.Path]::GetTempPath()
+          $tmp_slash = $tmp -replace '\\', '/'
+          Write-Host "`n`n" -NoNewline | bash tools/test-avrdude -v -t "$tmp_slash" -e build/src/${{env.BUILD_TYPE}}/avrdude.exe -c "-C build/src/avrdude.conf" -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"
+      - name: Archive build artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-msvc-${{matrix.arch}}
+          path: |
+            build/
+            !**/_deps/
+            !**/*.obj
+      - name: Move executables
+        run: |
+          mv build/src/${{env.BUILD_TYPE}}/avrdude.exe build/src
+          mv build/src/${{env.BUILD_TYPE}}/avrdude.pdb build/src
+      - name: Archive executables
+        uses: actions/upload-artifact@v7
+        with:
+          name: avrdude-msvc-${{matrix.arch}}
+          path: |
+            build/src/avrdude.exe
+            build/src/avrdude.pdb
+            build/src/avrdude.conf
+      - name: Move executables
+        if: matrix.arch == 'x64'
+        run: |
+          mv build/src/${{env.BUILD_TYPE}}/_swig_avrdude.pyd build/src
+      - name: Archive Python related files for x64
+        if: matrix.arch == 'x64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: avrdude-msvc-python_x64
+          path: |        
+            build/src/avrdude.conf
+            build/src/_swig_avrdude.pyd
+            build/src/swig_avrdude.py
+            build/src/windows.rc
+            build/src/avrdude-gui.bat
+
+  mingw:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    strategy:
+      matrix:
+        include:
+          - { sys: mingw64, env: x86_64 }
+          - { sys: ucrt64, env: ucrt-x86_64 }
+          - { sys: clang64, env: clang-x86_64 }
+    steps:
+      - uses: actions/checkout@v6
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.sys}}
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-${{matrix.env}}-gcc
+            mingw-w64-${{matrix.env}}-cmake
+            mingw-w64-${{matrix.env}}-python            
+            mingw-w64-${{matrix.env}}-swig
+            mingw-w64-${{matrix.env}}-libelf
+            mingw-w64-${{matrix.env}}-libusb
+            mingw-w64-${{matrix.env}}-libusb-compat-git
+            mingw-w64-${{matrix.env}}-hidapi
+            mingw-w64-${{matrix.env}}-libftdi
+            mingw-w64-${{matrix.env}}-libserialport
+            mingw-w64-${{matrix.env}}-readline
+            mingw-w64-${{matrix.env}}-ncurses
+            mingw-w64-${{matrix.env}}-termcap
+      - name: Configure
+        run: >-
+          cmake
+          -G"MSYS Makefiles"
+          -D DEBUG_CMAKE=1
+          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -D SWIG_EXECUTABLE=SWIG_EXECUTABLE-NOTFOUND
+          -B build
+      - name: Build
+        run: cmake --build build
+      - name: "avrdude -? (not installed)"
+        run: build/src/avrdude -?
+      - name: "Dryrun test (not installed)"
+        run: printf "\n\n" | ./tools/test-avrdude -v -e build/src/avrdude.exe -t . -c "-C build/src/avrdude.conf" -d0 -p"-cdryrun -pm2560" -p"-cdryrun -pavr64du28"
+      - name: Archive build artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-mingw-${{matrix.env}}
+          path: |
+            build/
+      - name: Archive executables
+        uses: actions/upload-artifact@v7
+        with:
+          name: avrdude-mingw-${{matrix.env}}
+          path: |
+            build/src/avrdude.exe
+            build/src/avrdude.conf

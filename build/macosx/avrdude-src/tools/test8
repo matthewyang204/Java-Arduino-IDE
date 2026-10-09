@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+
+# Published under GNU General Public License, version 3 (GPL-3.0)
+# Author Stefan Rueger, 2024
+
+progname=$(basename "$0")
+adopts=()
+mem=ALL
+init=-1
+rand=-1
+avrdude_bin=avrdude
+
+Usage() {
+cat <<END
+Syntax: $progname [<opts>] <programmer> <part>
+Function: test AVRDUDE v 8.0 or later with -c programmer -p part;
+  also leaves a file bak-<programmer>-<part>.hex for inspection
+Options:
+  -i <n>     Write human-readable contents seeded by <n> to part and exit
+  -r <n>     Write random contents seeded by <n> to part and exit
+  -e <exe>   Path of the avrdude executable
+  -f         Emulate factory reset by erasing eeprom and flash only
+  -a <opt>   Pass option <opt> to avrdude; no space in <opt>, eg, -Pch340
+  -m <mlist> Use memory list <mlist> instead of ALL
+
+Examples:
+  - Prepare a part with non-trivial random content
+    $ test8 -r1 usbasp t13a
+
+  - Then test ...
+    $ test8 avrisp2 t13a
+    $ test8 snap_isp t13a
+END
+}
+
+reset="factory reset"
+while getopts ":i:r:a:e:m:f" opt; do
+  case ${opt} in
+     i) init=0; [[ ! -z "$OPTARG" ]] && init="$OPTARG"
+        ;;
+     r) rand=0; [[ ! -z "$OPTARG" ]] && rand="$OPTARG"
+        ;;
+     a) if [[ ! -z "$OPTARG" ]]; then adopts+=("$OPTARG"); fi
+        ;;
+     e) avrdude_bin="$OPTARG"
+        ;;
+     f) reset="erase flash; erase eeprom; flush"
+        ;;
+     m) if [[ ! -z "$OPTARG" ]]; then mem="$OPTARG"; fi
+        ;;
+    --) shift;
+        break
+        ;;
+   \?) echo "$progname: invalid option -$OPTARG" 1>&2
+       Usage; exit 1
+       ;;
+   : ) echo "$progname: invalid option -$OPTARG requires an argument" 1>&2
+       Usage; exit 1
+       ;;
+  esac
+done
+shift $((OPTIND -1))
+
+
+if [ $# -ne 2 ]; then
+  why=missing; [ $# -gt 2 ] && why="too many"
+  echo $progname: $why arguments
+  Usage
+  exit 1
+fi
+
+######
+# Generated backup file
+
+f="bak-$1-$2.hex:I"
+
+######
+# Initialise and exit if requested by -i<n> or -r<n>
+
+if [[ $init -gt -1 || $rand -gt -1 ]]; then
+  how="init=$init"; [ $rand -gt -1 ] && how="random=$rand"
+  $avrdude_bin -qqc dryrun -p $2 -U $mem:r:$f -x $how
+  $avrdude_bin "${adopts[@]}" -c $1 -p $2 -U $mem:w:$f
+  echo $progname: $2 initialised
+  exit 0
+fi
+
+######
+# Actual test
+
+if ! $avrdude_bin "${adopts[@]}" -c $1 -p $2 -D -U$mem:r:$f -T "$reset" -U$mem:w:$f; then
+  echo -------------------------------
+  echo Re-running to create error logs
+  $avrdude_bin "${adopts[@]}" -vv -c $1 -p $2 -D -U$mem:r:$f -T "$reset" -U$mem:w:$f -llog-$1-$2.txt
+fi

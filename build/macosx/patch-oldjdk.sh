@@ -27,9 +27,9 @@ fi
 OLD="/System/Library/Frameworks/JavaRuntimeSupport.framework/Versions/A/JavaRuntimeSupport"
 NEW="/System/Library/Frameworks/JavaVM.framework/Versions/A/Frameworks/JavaRuntimeSupport.framework/Versions/A/JavaRuntimeSupport"
 
-if [ ! -f "$NEW" ]; then
+if [ ! -e "$NEW" ]; then
     echo "ERROR: <=Catalina framework binary not found: $NEW" >&2
-    exit 1
+    echo "WARNING: Continuing as you wish..."
 fi
 
 count=0

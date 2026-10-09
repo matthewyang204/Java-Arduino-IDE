@@ -15,4 +15,4 @@ SOURCES = \
 all:
 	$(CXX) -shared $(CXXFLAGS) $(SOURCES) -o libastylej.dll
 	mkdir -p ../../windows/libastylej-$(ASTYLE_VERSION)
-	cp libastylej.dll ../../windows/libastylej-$(ASTYLE_VERSION)/AStylej.dll
+	cp libastylej.dll ../../windows/libastylej-$(ASTYLE_VERSION)/

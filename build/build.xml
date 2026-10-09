@@ -1110,22 +1110,18 @@
 
     <antcall target="windows-build-avr-toolchain" />
 
-    <antcall target="unzip">
-      <param name="archive_file" value="./libastylej-2.05.1-5.zip" />
-      <param name="archive_url" value="https://downloads.arduino.cc/libastylej-2.05.1-5.zip" />
-      <param name="final_folder" value="${staging_folder}/libastylej-2.05.1" />
-      <param name="dest_folder" value="${staging_folder}" />
-    </antcall>
+    <exec executable="make" dir="${basedir}/macosx/astyle" failonerror="true">
+        <arg value="-f"/>
+        <arg value="Makefile.win32"/>
+    </exec>
     <copy file="windows/libastylej-2.05.1/AStylej.dll" todir="windows/work/lib" />
     <copy file="windows/msvcp100.dll" todir="windows/work" />
     <copy file="windows/msvcr100.dll" todir="windows/work" />
 
-    <antcall target="unzip">
-      <param name="archive_file" value="./liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
-      <param name="archive_url" value="https://downloads.arduino.cc/liblistSerials/liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
-      <param name="final_folder" value="${staging_folder}/liblistSerials-${LIBLISTSERIAL-VERSION}" />
-      <param name="dest_folder" value="${staging_folder}" />
-    </antcall>
+    <exec executable="make" dir="${basedir}/macosx/libserialportsc" failonerror="true">
+        <arg value="-f"/>
+        <arg value="Makefile.ntdll"/>
+    </exec>
     <copy file="windows/liblistSerials-${LIBLISTSERIAL-VERSION}/windows/listSerialsj.dll" todir="windows/work/lib/" />
     <antcall target="make-file-executable">
       <param name="file" value="windows/work/lib/listSerialsj.dll" />

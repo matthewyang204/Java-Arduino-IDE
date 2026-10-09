@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -eu
 
-VERSION=$(sw_vers -productVersion)
+VERSION=""
+if [[ -z "$MACOSX_DEPLOYMENT_TARGET" ]]; then
+    VERSION=$(sw_vers -productVersion)
+else
+    VERSION="$MACOSX_DEPLOYMENT_TARGET"
+fi
 if [[ "$(printf '%s\n' "$VERSION" "10.15" | sort -V | tail -n 1)" != "10.15" ]]; then
     echo "Skipping: macOS $VERSION is newer than 10.15."
     exit 0

@@ -555,6 +555,10 @@
     <antcall target="portable-${portable}">
       <param name="parentdir" value="macosx/work/${staging_hardware_folder}/.." />
     </antcall>
+
+    <exec executable="/bin/bash" failonerror="true" dir="${basedir}/macosx">
+        <arg value="${basedir}/macosx/patch-oldjdk.sh"/>
+    </exec>
   </target>
 
   <!-- Unzip AVR tools -->

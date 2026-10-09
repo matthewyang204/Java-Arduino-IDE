@@ -1118,7 +1118,7 @@
     <copy file="windows/msvcp100.dll" todir="windows/work" />
     <copy file="windows/msvcr100.dll" todir="windows/work" />
 
-    <exec executable="make" dir="${basedir}/macosx/libserialportsc" failonerror="true">
+    <exec executable="make" dir="${basedir}/macosx/listserialportsc" failonerror="true">
         <arg value="-f"/>
         <arg value="Makefile.ntdll"/>
     </exec>

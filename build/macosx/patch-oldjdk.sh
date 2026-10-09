@@ -2,6 +2,7 @@
 set -eu
 
 VERSION=""
+MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-}"
 if [[ -z "$MACOSX_DEPLOYMENT_TARGET" ]]; then
     VERSION=$(sw_vers -productVersion)
 else

@@ -1,0 +1,10 @@
+CC ?= clang
+JAVA_HOME ?= $(HOME)
+CFLAGS += -fPIC -I"$(JAVA_HOME)/include" -I"$(JAVA_HOME)/include/win32"
+LDFLAGS += -Wl,-Bstatic -lserialport -Wl,-Bdynamic -lsetupapi -lcfgmgr32
+LIBLISTSERIAL_VERSION ?= 1.4.2-2
+
+all:
+	$(CC) -shared $(CFLAGS) jnilib.c $(LDFLAGS) -o liblistSerialsj.dll
+	mkdir -p ../../windows/liblistSerials-$(LIBLISTSERIAL_VERSION)/windows
+	cp liblistSerialsj.dll ../../windows/liblistSerials-$(LIBLISTSERIAL_VERSION)/windows/

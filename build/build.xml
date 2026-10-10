@@ -936,11 +936,31 @@
 
   <target name="build-arduino-builder" unless="no_arduino_builder">
     <property name="ARDUINO-BUILDER-EXTRA-VERSION" value="" /> <!-- default if not set already -->
+    <condition property="ARDUINO-BUILDER-ARCHIVE-FILE" value="arduino-builder-macosx-arm64-arm64-${ARDUINO-BUILDER-VERSION}-signed.tar.bz2">
+      <and>
+        <equals arg1="${platform}" arg2="macosx"/>
+        <or>
+          <equals arg1="${os.arch}" arg2="arm64"/>
+          <equals arg1="${os.arch}" arg2="aarch64"/>
+        </or>
+      </and>
+    </condition>
+    <property name="ARDUINO-BUILDER-ARCHIVE-FILE" value="arduino-builder-${platform}-${ARDUINO-BUILDER-VERSION}${ARDUINO-BUILDER-EXTRA-VERSION}.tar.bz2"/>
+    <condition property="ARDUINO-BUILDER-ARCHIVE-URL" value="https://github.com/matthewyang204/arduino-1x-toolchain-avr/releases/download/10.09.2026-arm64-darwin/arduino-builder-macosx-arm64-arm64-${ARDUINO-BUILDER-VERSION}-signed.tar.bz2">
+      <and>
+        <equals arg1="${platform}" arg2="macosx"/>
+        <or>
+          <equals arg1="${os.arch}" arg2="arm64"/>
+          <equals arg1="${os.arch}" arg2="aarch64"/>
+        </or>
+      </and>
+    </condition>
+    <property name="ARDUINO-BUILDER-ARCHIVE-URL" value="https://downloads.arduino.cc/tools/arduino-builder-${platform}-${ARDUINO-BUILDER-VERSION}${ARDUINO-BUILDER-EXTRA-VERSION}.tar.bz2"/>
     <delete dir="${staging_folder}/arduino-builder-${platform}" includeemptydirs="true"/>
     <mkdir dir="${staging_folder}/arduino-builder-${platform}"/>
     <antcall target="untar-native">
-      <param name="archive_file" value="./arduino-builder-${platform}-${ARDUINO-BUILDER-VERSION}${ARDUINO-BUILDER-EXTRA-VERSION}.tar.bz2" />
-      <param name="archive_url" value="https://downloads.arduino.cc/tools/arduino-builder-${platform}-${ARDUINO-BUILDER-VERSION}${ARDUINO-BUILDER-EXTRA-VERSION}.tar.bz2" />
+      <param name="archive_file" value="${ARDUINO-BUILDER-ARCHIVE-FILE}" />
+      <param name="archive_url" value="${ARDUINO-BUILDER-ARCHIVE-URL}" />
       <param name="final_folder" value="${staging_folder}/arduino-builder-${platform}/arduino-builder" />
       <param name="dest_folder" value="${staging_folder}/arduino-builder-${platform}" />
     </antcall>
@@ -988,11 +1008,25 @@
         </not>
       </and>
     </condition>
-    <antcall target="untar-unzip-checksum-sidecar"/>
+    <available file="${archive_file}.sha256" property="archive.sha256.sidecar.available"/>
+    <condition property="archive.sha256.sidecar.verify">
+      <and>
+        <isset property="archive.sha256.sidecar.available"/>
+        <not><isset property="archive.checksum.known"/></not>
+      </and>
+    </condition>
+    <condition property="archive.sha.sidecar.verify">
+      <and>
+        <not><isset property="archive.sha256.sidecar.available"/></not>
+        <not><isset property="archive.checksum.known"/></not>
+      </and>
+    </condition>
+    <antcall target="untar-unzip-checksum-sha256-sidecar"/>
+    <antcall target="untar-unzip-checksum-sha-sidecar"/>
     <antcall target="untar-unzip-checksum-known"/>
   </target>
 
-  <target name="untar-unzip-checksum-sidecar" unless="archive.checksum.known">
+  <target name="untar-unzip-checksum-sha-sidecar" if="archive.sha.sidecar.verify">
     <echo>Testing checksum of "${archive_file}"</echo>
     <checksum file="${archive_file}" algorithm="sha" fileext=".sha" verifyproperty="checksum.matches"/>
     <condition property="checksum.matches.fail">
@@ -1003,6 +1037,12 @@
       File ${archive_file} failed checksum.
       Please remove "${archive_file}" to download it again.
     </fail>
+  </target>
+
+  <target name="untar-unzip-checksum-sha256-sidecar" if="archive.sha256.sidecar.verify">
+    <echo>Testing SHA-256 checksum of "${archive_file}"</echo>
+    <checksum file="${archive_file}" algorithm="SHA-256" fileext=".sha256" verifyproperty="archive.checksum.matches"/>
+    <fail unless="archive.checksum.matches">SHA-256 checksum failed for ${archive_file}.</fail>
   </target>
 
   <target name="untar-unzip-checksum-known" if="archive.checksum.known">

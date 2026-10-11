@@ -1150,9 +1150,12 @@
     </copy>
     <delete dir="${staging_folder}/arduino-builder-windows" includeemptydirs="true"/>
 
+    <condition property="jna.arch" value="win32-x86-64" else="win32-x86">
+      <equals arg1="${sun.arch.data.model}" arg2="64"/>
+    </condition>
     <unzip src="../arduino-core/lib/jna-4.2.2.jar" dest="windows/work/lib">
       <patternset>
-        <include name="com/sun/jna/win32-x86/jnidispatch.dll"/>
+        <include name="com/sun/jna/${jna.arch}/jnidispatch.dll"/>
       </patternset>
       <mapper type="flatten"/>
     </unzip>

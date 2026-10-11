@@ -1112,13 +1112,16 @@
 
     <antcall target="windows-build-avr-toolchain" />
 
+    <condition property="runtime.suffix" value="_64" else="">
+      <equals arg1="${sun.arch.data.model}" arg2="64"/>
+    </condition>
     <exec executable="make" dir="${basedir}/macosx/astyle" failonerror="true">
         <arg value="-f"/>
         <arg value="Makefile.win32"/>
     </exec>
     <copy file="windows/libastylej-2.05.1/AStylej.dll" todir="windows/work/lib" />
-    <copy file="windows/msvcp100.dll" todir="windows/work" />
-    <copy file="windows/msvcr100.dll" todir="windows/work" />
+    <copy file="windows/msvcp100${runtime.suffix}.dll" tofile="windows/work/msvcp100.dll" />
+    <copy file="windows/msvcr100${runtime.suffix}.dll" tofile="windows/work/msvcr100.dll" />
 
     <exec executable="make" dir="${basedir}/macosx/listserialportsc" failonerror="true">
         <arg value="-f"/>

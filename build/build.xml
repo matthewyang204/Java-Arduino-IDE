@@ -438,7 +438,9 @@
     <delete dir="macosx/work" />
     <delete dir="macosx/working_dir" />
     <delete dir="macosx/working.dmg" />
-    <delete file="macosx/arduino-*.dmg" />
+    <delete>
+      <fileset dir="${basedir}/macosx" includes="arduino-*.dmg"/>
+    </delete>
     <delete>
       <fileset dir="macosx" includes="arduino-*macosx*.zip"/>
     </delete>
@@ -1234,22 +1236,21 @@
 
     <antcall target="windows-build-avr-toolchain" />
 
-    <antcall target="unzip">
-      <param name="archive_file" value="./libastylej-2.05.1-5.zip" />
-      <param name="archive_url" value="https://downloads.arduino.cc/libastylej-2.05.1-5.zip" />
-      <param name="final_folder" value="${staging_folder}/libastylej-2.05.1" />
-      <param name="dest_folder" value="${staging_folder}" />
-    </antcall>
+    <condition property="runtime.suffix" value="_64" else="">
+      <equals arg1="${sun.arch.data.model}" arg2="64"/>
+    </condition>
+    <exec executable="make" dir="${basedir}/macosx/astyle" failonerror="true">
+        <arg value="-f"/>
+        <arg value="Makefile.win32"/>
+    </exec>
     <copy file="windows/libastylej-2.05.1/AStylej.dll" todir="windows/work/lib" />
-    <copy file="windows/msvcp100.dll" todir="windows/work" />
-    <copy file="windows/msvcr100.dll" todir="windows/work" />
+    <copy file="windows/msvcp100${runtime.suffix}.dll" tofile="windows/work/msvcp100.dll" />
+    <copy file="windows/msvcr100${runtime.suffix}.dll" tofile="windows/work/msvcr100.dll" />
 
-    <antcall target="unzip">
-      <param name="archive_file" value="./liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
-      <param name="archive_url" value="https://downloads.arduino.cc/liblistSerials/liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
-      <param name="final_folder" value="${staging_folder}/liblistSerials-${LIBLISTSERIAL-VERSION}" />
-      <param name="dest_folder" value="${staging_folder}" />
-    </antcall>
+    <exec executable="make" dir="${basedir}/macosx/listserialportsc" failonerror="true">
+        <arg value="-f"/>
+        <arg value="Makefile.ntdll"/>
+    </exec>
     <copy file="windows/liblistSerials-${LIBLISTSERIAL-VERSION}/windows/listSerialsj.dll" todir="windows/work/lib/" />
     <antcall target="make-file-executable">
       <param name="file" value="windows/work/lib/listSerialsj.dll" />
@@ -1276,9 +1277,12 @@
     </copy>
     <delete dir="${staging_folder}/arduino-builder-windows" includeemptydirs="true"/>
 
+    <condition property="jna.arch" value="win32-x86-64" else="win32-x86">
+      <equals arg1="${sun.arch.data.model}" arg2="64"/>
+    </condition>
     <unzip src="../arduino-core/lib/jna-4.2.2.jar" dest="windows/work/lib">
       <patternset>
-        <include name="com/sun/jna/win32-x86/jnidispatch.dll"/>
+        <include name="com/sun/jna/${jna.arch}/jnidispatch.dll"/>
       </patternset>
       <mapper type="flatten"/>
     </unzip>

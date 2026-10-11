@@ -419,6 +419,10 @@ public class Theme {
         return scale;
     } catch (NumberFormatException ignore) {
     }
+
+    if (OSUtils.isWindows()){
+      return (BaseNoGui.getPlatform().getSystemDPI() * 100 / 96) / 2;
+    }
     return BaseNoGui.getPlatform().getSystemDPI() * 100 / 96;
   }
 

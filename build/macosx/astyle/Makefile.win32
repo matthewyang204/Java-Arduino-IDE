@@ -1,4 +1,4 @@
-CXX = g++
+CXX ?= g++
 JAVA_HOME ?= $(HOME)
 ASTYLE_VERSION ?= 2.05.1
 

@@ -17,13 +17,13 @@ Arduino is an open-source physical computing platform based on a simple I/O boar
 
 ## Bug reports and technical discussions
 
-- To report a *bug* in the software or to request *a simple enhancement*, go to [Github Issues](https://github.com/arduino/Arduino/issues).
+- To report a *bug* in the software or to request *a simple enhancement*, go to [Github Issues](https://github.com/matthewyang204/Java-Arduino-IDE/issues).
 - More complex requests and technical discussions should go on the [Arduino Developers mailing list](https://groups.google.com/a/arduino.cc/forum/#!forum/developers).
 - If you're interested in modifying or extending the Arduino software, we strongly suggest discussing your ideas on the [Developers mailing list](https://groups.google.com/a/arduino.cc/forum/#!forum/developers) *before* starting to work on them. That way you can coordinate with the Arduino Team and others, giving your work a higher chance of being integrated into the official release.
 
 ### Security
 
-If you think you found a vulnerability or other security-related bug in this project, please read our [security policy](https://github.com/arduino/Arduino/security/policy) and report the bug to our Security Team 🛡️. Thank you!
+If you think you found a vulnerability or other security-related bug in this project, please read our [security policy](https://github.com/matthewyang204/Java-Arduino-IDE/security/policy) and report the bug to our Security Team 🛡️. Thank you!
 
 e-mail contact: security@arduino.cc
 
@@ -47,8 +47,8 @@ The repositories for these extra parts can be found here:
 ## Building and testing
 
 Instructions for building the IDE and running unit tests can be found on the wiki:
-- [Building Arduino](https://github.com/arduino/Arduino/wiki/Building-Arduino)
-- [Testing Arduino](https://github.com/arduino/Arduino/wiki/Testing-Arduino)
+- [Building Arduino](https://github.com/matthewyang204/Java-Arduino-IDE/wiki/Building-Arduino)
+- [Testing Arduino](https://github.com/matthewyang204/Java-Arduino-IDE/wiki/Testing-Arduino)
 
 ## Credits
 

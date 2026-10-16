@@ -153,12 +153,20 @@ public class Platform extends processing.app.Platform {
 
 
   private String getLibraryFolder() throws FileNotFoundException {
-    return FileManager.findFolder(kUserDomain, kDomainLibraryFolderType);
+    return getUserFolder("Library");
   }
 
 
   private String getDocumentsFolder() throws FileNotFoundException {
-    return FileManager.findFolder(kUserDomain, kDocumentsFolderType);
+    return getUserFolder("Documents");
+  }
+
+  private String getUserFolder(String folder) throws FileNotFoundException {
+    File directory = new File(System.getProperty("user.home"), folder);
+    if (!directory.exists()) {
+      throw new FileNotFoundException("User folder not found: " + directory.getAbsolutePath());
+    }
+    return directory.getAbsolutePath();
   }
 
   @Override
